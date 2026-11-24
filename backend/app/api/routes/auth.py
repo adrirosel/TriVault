@@ -1,4 +1,4 @@
-"""Authentication routes: register, login, and current user profile."""
+"""Authentication routes: register, login, current user profile, and profile update."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from app.api.deps import get_current_user, get_db
 from app.core.security import create_access_token
 from app.models.user import User
 from app.schemas.auth import TokenResponse, UserLogin, UserOut, UserRegister
+from app.schemas.user import UserUpdate
 from app.services.auth_service import (
     EmailAlreadyRegisteredError,
     InvalidCredentialsError,
@@ -47,4 +48,17 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
 @router.get("/me", response_model=UserOut)
 def read_current_user(current_user: User = Depends(get_current_user)) -> User:
     """Return the authenticated user's profile."""
+    return current_user
+
+
+@router.patch("/me", response_model=UserOut)
+def update_current_user(
+    payload: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """Update the authenticated user's annual inflation rate."""
+    current_user.annual_inflation_rate = payload.annual_inflation_rate
+    db.commit()
+    db.refresh(current_user)
     return current_user
