@@ -44,12 +44,43 @@ trivault/
 ├── CONTEXT.md                    # Arquitectura, modelo de datos y reglas de contexto para IA
 ├── README.md                     # Documentación principal del proyecto
 ├── .gitignore                    # Exclusión de secretos (.env), dependencias y builds
-├── .github/workflows/            # Pipelines de CI/CD con GitHub Actions
+├── .github/workflows/            # CI/CD (PENDIENTE: aún no hay ci.yml)
 ├── docs/
 │   └── especificacion-tecnica.md # Especificación funcional y técnica base
 ├── backend/                      # API REST en FastAPI + SQLAlchemy + Alembic
-└── frontend/                     # SPA en React + Vite + TypeScript + Tailwind + Recharts
+└── frontend/                     # SPA en React + Vite + TypeScript + Tailwind
 ```
+
+---
+
+## 3.1 Estado de Fase 1 y pendientes
+
+**Gate Fase 1: BLOQUEADA** (no avanzar a Fase 2 hasta cerrar el CI como mínimo).
+
+| Entregable | Estado |
+|---|---|
+| Backend (MySQL + Alembic, auth JWT, cuentas, categorías, transacciones/transferencias, `PATCH /auth/me`) | Completo |
+| Frontend (Vite + React + TS + Tailwind, login/register, dashboard overview, CRUD cuentas/categorías/transacciones) | Completo en `feat/frontend-core` |
+| CI GitHub Actions (Pytest + `tsc` / `vite build`) | **Pendiente** — falta `.github/workflows/ci.yml` |
+| Test de rollback mid-transfer (saldos intactos ante fallo) | **Pendiente** (soft-gap) |
+| Recharts / analytics / fondos (Fase 2), CSV / Telegram (Fase 3), Supabase prod (Fase 4) | Fuera de alcance actual |
+
+### Desarrollo local (frontend)
+
+```bash
+# MySQL (Docker) + API
+docker compose up -d
+cd backend && .venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# SPA (proxy /api -> :8000; host IPv4)
+cd frontend
+copy .env.example .env   # VITE_API_URL vacío usa el proxy de Vite
+npm install
+npm run dev              # http://127.0.0.1:5173
+```
+
+En `backend/.env`, `ALLOWED_ORIGINS` debe incluir `http://127.0.0.1:5173` y/o `http://localhost:5173`.
 
 ---
 
@@ -67,9 +98,9 @@ El despliegue está diseñado como un monorepo conectado a **Vercel**, **Supabas
    - En Fase 3, los recordatorios diarios se disparan con **Vercel Cron Jobs** sobre `/api/cron/daily-reminder`.
 3. **Base de datos en Supabase**:
    - Instancia PostgreSQL gestionada en producción, migrada desde el esquema versionado con Alembic.
-4. **Automatización con GitHub Actions**:
-   - Ejecución automática de tests (Pytest), comprobación de tipos y build de frontend en cada Pull Request / integración.
-   - Disparo automatizado del despliegue hacia Vercel una vez superadas las validaciones.
+4. **Automatización con GitHub Actions** (**pendiente de implementar**):
+   - Objetivo: Pytest contra MySQL de test, typecheck y `vite build` en PRs / pushes a `develop` y `main`.
+   - CD a Vercel solo tras checks verdes; no fusionar trabajo de feature en ramas de deploy sin revisión.
 
 > **Seguridad**: ningún archivo `.env`, clave privada o credencial se sube al repositorio. Utiliza siempre los archivos `.env.example` como plantilla local.
 

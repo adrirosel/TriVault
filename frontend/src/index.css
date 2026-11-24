@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ─────────────────────────────────────────── */
+@theme {
+  /* Fonts */
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* 60 % — Base surfaces */
+  --color-base: #F5F5F4;
+
+  /* 30 % — Elevated surfaces */
+  --color-surface: #FAFAFA;
+
+  /* Borders */
+  --color-border: #E4E4E7;
+
+  /* Text */
+  --color-text: #111827;
+  --color-text-muted: #6B7280;
+
+  /* 10 % — Accent (teal) */
+  --color-accent: #0D9488;
+  --color-accent-hover: #0F766E;
+  --color-accent-light: #F0FDFA;
+  --color-on-accent: #F4F4F5;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-success-bg: #ECFDF5;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEF2F2;
+  --color-warn: #D97706;
+  --color-warn-bg: #FFFBEB;
+
+  /* Typography scale */
+  --text-body: 1rem;
+  --text-display: 2.5rem;
+  --tracking-tight: -0.025em;
+  --leading-heading: 1.1;
+
+  /* Transitions */
+  --duration-fast: 150ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Canonical vars remap for dark — components keep using the same names */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-base: #09090B;
+    --color-surface: #14171D;
+    --color-border: #27272A;
+    --color-text: #F4F4F5;
+    --color-text-muted: #71717A;
+    --color-accent: #14B8A6;
+    --color-accent-hover: #0D9488;
+    --color-accent-light: #134E4A;
+    --color-on-accent: #F4F4F5;
+    --color-success: #34D399;
+    --color-success-bg: #052E1C;
+    --color-danger: #F87171;
+    --color-danger-bg: #450A0A;
+    --color-warn: #FBBF24;
+    --color-warn-bg: #422006;
+  }
+}
+
+/* ─── Base resets ───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-base);
+  color: var(--color-text);
+  min-height: 100dvh;
+}
+
+/* ─── Utility: tabular numeric data ────────────────────────────*/
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* ─── Utility: heading scale ───────────────────────────────────*/
+.heading-xl {
+  font-size: var(--text-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-heading);
+}
+
+.prose-narrow {
+  max-width: 60ch;
+}
+
+/* ─── Scrollbar minimal ────────────────────────────────────────*/
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }

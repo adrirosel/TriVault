@@ -153,6 +153,8 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
 | **Fase 3: Automatización** | Parser CSV bancario con deduplicación `import_hash` (SHA-256), endpoint Webhook móvil y módulo de Bot privado de Telegram (Webhook + Vercel Cron `/api/cron/daily-reminder`). | Subir dos veces el mismo CSV no duplica movimientos; el webhook registra gastos; el bot envía recordatorio diario y permite registrar desde chat. |
 | **Fase 4: Migración y Producción** | Migración de MySQL a Supabase (PostgreSQL + `psycopg`), configuración de secretos en Vercel/GitHub Actions y despliegue continuo completo. | Aplicación operando en producción bajo HTTPS con datos persistentes en Supabase y CI/CD automático. |
 
+**Estado Fase 1 (gate):** backend + frontend de núcleo implementados. **Pendiente para cerrar la fase:** `.github/workflows/ci.yml` (Pytest + typecheck/build frontend) y, como soft-gap, un test que fuerce fallo a mitad de transferencia y afirme rollback de saldos. No iniciar Fase 2 hasta aprobar el phase-gate con CI en verde. Detalle operativo en [README.md](README.md) §3.1.
+
 ---
 
 ## 8. Flujo de Trabajo Git y CI/CD
@@ -165,5 +167,5 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
   - Commits frecuentes, atómicos y con mensajes explícitos siguiendo Conventional Commits (`feat:`, `fix:`, `sec:`, `docs:`, `test:`, `refactor:`, `chore:`).
   - Etiquetas (tags) semánticas periódicas en `main` al cerrar hitos o fases (`v0.1.0`, `v0.2.0`, etc.).
 - **GitHub Actions**:
-  - CI automático en Pull Requests y pushes a `develop` / `main` (Pytest + linting + `tsc` / `vite build`).
-  - CD automático para desplegar a Vercel tras superar los checks.
+  - CI automático en Pull Requests y pushes a `develop` / `main` (Pytest + linting + `tsc` / `vite build`) — **workflow aún no creado** (bloquea el cierre de Fase 1).
+  - CD automático para desplegar a Vercel tras superar los checks (no mergear features directamente en ramas de deploy sin revisión).
