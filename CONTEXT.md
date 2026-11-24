@@ -12,6 +12,8 @@
 4. **Seguridad como prioridad**:
    - Toda consulta de lectura, escritura o borrado en BD debe filtrar obligatoriamente por `user_id` extraído del token JWT validado (nunca confiar en IDs enviados por el cliente sin verificar propiedad).
    - Nunca subir archivos `.env`, tokens, contraseñas ni claves al repositorio. Mantener `.env.example` sin valores sensibles.
+5. **Retrospectiva obligatoria de fin de fase (Phase Gate)**:
+   - Siempre que se considere terminada una fase (o antes de proponer/iniciar trabajo de la siguiente), la IA debe invocar la skill `.agents/skills/phase-gate-review/SKILL.md` y ejecutar una auditoría formal de entregables, seguridad, invariantes financieras, migraciones y tests para confirmar si se puede avanzar con garantías o si quedan brechas por cerrar.
 
 ---
 
