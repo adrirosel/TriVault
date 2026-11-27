@@ -8,14 +8,14 @@ import { accountsApi } from '@/api/accounts'
 import { transactionsApi } from '@/api/transactions'
 import type { Account, BucketType } from '@/types/account'
 import type { Transaction } from '@/types/transaction'
-import { apiErrorMessage, formatDate, formatEUR } from '@/utils/format'
+import { apiErrorMessage, formatDate, formatEUR, sumDecimal } from '@/utils/format'
 
 const BUCKET_ORDER: BucketType[] = ['daily', 'emergency', 'investment']
 
-function sumBalances(accounts: Account[], bucket?: BucketType): number {
-  return accounts
-    .filter((a) => (bucket ? a.bucket_type === bucket : true))
-    .reduce((acc, a) => acc + parseFloat(a.current_balance), 0)
+function sumBalances(accounts: Account[], bucket?: BucketType): string {
+  return sumDecimal(
+    accounts.filter((a) => (bucket ? a.bucket_type === bucket : true)).map((a) => a.current_balance),
+  )
 }
 
 export function Dashboard() {

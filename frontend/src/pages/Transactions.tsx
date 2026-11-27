@@ -10,8 +10,13 @@ import { categoriesApi } from '@/api/categories'
 import { transactionsApi } from '@/api/transactions'
 import type { Account } from '@/types/account'
 import type { Category } from '@/types/category'
-import type { Transaction, TransactionCreate, TransactionType } from '@/types/transaction'
-import { apiErrorMessage, formatDate, formatEUR, nowISO } from '@/utils/format'
+import type {
+  Transaction,
+  TransactionCreate,
+  TransactionType,
+  TransactionUpdate,
+} from '@/types/transaction'
+import { apiErrorMessage, formatDate, formatEUR, nowISO, toLocalInputValue } from '@/utils/format'
 
 const TYPE_OPTIONS = [
   { value: 'expense', label: 'Gasto' },
@@ -34,6 +39,7 @@ export function Transactions() {
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(nowISO())
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -81,6 +87,7 @@ export function Transactions() {
     id == null ? '—' : (categories.find((c) => c.id === id)?.name ?? `#${id}`)
 
   const resetForm = () => {
+    setEditingId(null)
     setType('expense')
     setDestinationId('')
     setCategoryId('')
@@ -89,24 +96,51 @@ export function Transactions() {
     setDate(nowISO())
   }
 
+  const startEdit = (tx: Transaction) => {
+    setError('')
+    setEditingId(tx.id)
+    setType(tx.type)
+    setAccountId(String(tx.account_id))
+    setDestinationId(tx.destination_account_id != null ? String(tx.destination_account_id) : '')
+    setCategoryId(tx.category_id != null ? String(tx.category_id) : '')
+    setAmount(tx.amount)
+    setDescription(tx.description ?? '')
+    setDate(toLocalInputValue(tx.transaction_date))
+  }
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
     setSaving(true)
+    const isTransfer = type === 'transfer'
     try {
-      const payload: TransactionCreate = {
-        account_id: Number(accountId),
-        amount,
-        type,
-        transaction_date: new Date(date).toISOString(),
-        description: description || undefined,
-      }
-      if (type === 'transfer') {
-        payload.destination_account_id = Number(destinationId)
+      if (editingId != null) {
+        // Send every field explicitly so switching type clears the field that no longer applies.
+        const update: TransactionUpdate = {
+          account_id: Number(accountId),
+          amount,
+          type,
+          transaction_date: new Date(date).toISOString(),
+          description: description || null,
+          destination_account_id: isTransfer ? Number(destinationId) : null,
+          category_id: isTransfer ? null : Number(categoryId),
+        }
+        await transactionsApi.update(editingId, update)
       } else {
-        payload.category_id = Number(categoryId)
+        const payload: TransactionCreate = {
+          account_id: Number(accountId),
+          amount,
+          type,
+          transaction_date: new Date(date).toISOString(),
+          description: description || undefined,
+        }
+        if (isTransfer) {
+          payload.destination_account_id = Number(destinationId)
+        } else {
+          payload.category_id = Number(categoryId)
+        }
+        await transactionsApi.create(payload)
       }
-      await transactionsApi.create(payload)
       resetForm()
       await load()
     } catch (err) {
@@ -121,6 +155,7 @@ export function Transactions() {
     setError('')
     try {
       await transactionsApi.remove(id)
+      if (editingId === id) resetForm()
       await load()
     } catch (err) {
       setError(apiErrorMessage(err))
@@ -154,7 +189,7 @@ export function Transactions() {
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)] bg-[var(--color-surface)]">
                     {transactions.map((tx) => (
-                      <tr key={tx.id}>
+                      <tr key={tx.id} className={editingId === tx.id ? 'bg-[var(--color-base)]' : undefined}>
                         <td className="px-3 py-2 num text-xs text-[var(--color-text-muted)] whitespace-nowrap">
                           {formatDate(tx.transaction_date)}
                         </td>
@@ -185,7 +220,10 @@ export function Transactions() {
                           {tx.type === 'expense' ? '−' : tx.type === 'income' ? '+' : ''}
                           {formatEUR(tx.amount)}
                         </td>
-                        <td className="px-3 py-2 text-right">
+                        <td className="px-3 py-2 text-right whitespace-nowrap space-x-2">
+                          <Button type="button" variant="ghost" onClick={() => startEdit(tx)}>
+                            Editar
+                          </Button>
                           <Button type="button" variant="danger" onClick={() => void onDelete(tx.id)}>
                             Eliminar
                           </Button>
@@ -203,7 +241,9 @@ export function Transactions() {
               onSubmit={onSubmit}
               className="border border-[var(--color-border)] rounded-xl p-5 bg-[var(--color-surface)] space-y-4"
             >
-              <h2 className="text-lg font-semibold text-[var(--color-text)]">Nuevo movimiento</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                {editingId != null ? `Editar movimiento #${editingId}` : 'Nuevo movimiento'}
+              </h2>
 
               <Select
                 label="Tipo"
@@ -278,8 +318,14 @@ export function Transactions() {
                 className="w-full"
                 disabled={accounts.length === 0 || (type !== 'transfer' && categories.length === 0)}
               >
-                Registrar
+                {editingId != null ? 'Guardar cambios' : 'Registrar'}
               </Button>
+
+              {editingId != null && (
+                <Button type="button" variant="ghost" className="w-full" onClick={resetForm}>
+                  Cancelar edición
+                </Button>
+              )}
 
               {accounts.length === 0 && (
                 <p className="text-xs text-[var(--color-text-muted)]">

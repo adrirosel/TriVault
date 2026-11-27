@@ -24,7 +24,13 @@ export interface TransactionCreate {
   description?: string
 }
 
+/** Partial update: only sent keys change. Send null to clear category/destination when switching type. */
 export interface TransactionUpdate {
-  description?: string
+  account_id?: number
+  destination_account_id?: number | null
+  category_id?: number | null
+  type?: TransactionType
+  amount?: string
+  description?: string | null
   transaction_date?: string
 }
