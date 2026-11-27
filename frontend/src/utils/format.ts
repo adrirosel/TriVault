@@ -9,6 +9,44 @@ export function formatEUR(value: string | number): string {
   }).format(n)
 }
 
+/** Percentage with sign, e.g. "+5,20 %"; em dash when not computable. */
+export function formatPct(value: string | null, signed = true): string {
+  if (value == null) return '—'
+  const n = Number(value)
+  const formatted = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    signDisplay: signed ? 'exceptZero' : 'auto',
+  }).format(n)
+  return `${formatted} %`
+}
+
+/** EUR with explicit sign for gains/losses. */
+export function formatSignedEUR(value: string): string {
+  const n = Number(value)
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+    signDisplay: 'exceptZero',
+  }).format(n)
+}
+
+/** Fund quantities (shares / NAV) with up to 4 decimals. */
+export function formatQty(value: string): string {
+  return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 4 }).format(Number(value))
+}
+
+/** "2026-10" -> "oct 26" */
+export function formatMonth(yyyyMm: string): string {
+  const [y, m] = yyyyMm.split('-').map(Number)
+  return new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit' }).format(new Date(y, m - 1, 1))
+}
+
+/** Today's local date as YYYY-MM-DD (input[type=date]). */
+export function todayISODate(): string {
+  return toLocalInputValue().slice(0, 10)
+}
+
 /** Format ISO date string to dd/mm/yyyy */
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('es-ES', {
