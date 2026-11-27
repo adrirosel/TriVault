@@ -125,8 +125,12 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
 5. **`fund_positions`**
    - `id` (PK), `user_id` (FK -> `users.id`), `account_id` (FK -> `accounts.id`, cuenta tipo `investment`), `isin`, `fund_name`, `shares` (Decimal 12,4), `total_invested` (Decimal 12,2), `current_nav` (Decimal 12,4), `last_updated`.
 6. **`fund_contributions`**
-   - `id` (PK), `user_id` (FK -> `users.id`), `fund_position_id` (FK -> `fund_positions.id`), `operation_date` (Date), `order_type` (ENUM: `buy`, `sell`), `shares` (Decimal 12,4), `purchase_nav` (Decimal 12,4), `gross_amount` (Decimal 12,2), `fee` (Decimal 12,2, default `0.00`), `notes` (Nullable), `created_at`.
+   - `id` (PK), `user_id` (FK -> `users.id`), `fund_position_id` (FK -> `fund_positions.id`), `operation_date` (Date), `order_type` (ENUM: `buy`, `sell`), `shares` (Decimal 12,4 > 0), `purchase_nav` (Decimal 12,4 > 0), `gross_amount` (Decimal 12,2 > 0), `fee` (Decimal 12,2 ≥ 0, default `0.00`), `notes` (Nullable), `affects_cash` (Boolean, default `true`), `created_at`.
    - Permite trazabilidad fiel de cada compra/aportación (fecha, participaciones, precio de compra, importe destinado y comisión), recalcular con exactitud la posición agregada en `fund_positions` y conocer el periodo real de tenencia para calcular la inflación acumulada.
+   - **Reglas (Fase 2)**:
+     - `fund_positions.shares` y `total_invested` nunca los escribe el cliente: se reconstruyen reproduciendo todas las aportaciones en orden cronológico (método de **coste medio**). Una venta no puede superar las participaciones disponibles en su fecha. Unicidad `(user_id, account_id, isin)`; el ISIN se valida con su dígito de control.
+     - **La cuenta `investment` es el efectivo del bróker**: una compra descuenta `gross_amount + fee` y una venta abona `gross_amount − fee`, en la misma transacción atómica. Comprar sin efectivo suficiente → 422. `affects_cash = false` registra posiciones **históricas** (anteriores a TriVault) sin mover efectivo.
+     - El cubo `investment` = efectivo de sus cuentas + valor de mercado (`shares × current_nav`) de sus fondos. El NAV se actualiza **manualmente**.
 
 ---
 
@@ -141,6 +145,10 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
 3. **Rendimiento Real de Fondos Indexados**:
    - Compara el valor actual (`shares * current_nav`) frente al capital neto invertido y comisiones registradas en `fund_contributions`.
    - Contrasta la rentabilidad porcentual nominal frente a la inflación acumulada estimada durante el periodo de tenencia real obtenido de `fund_contributions`.
+   - Implementación: **coste ajustado por inflación** = Σ coste de cada compra × `(1 + r/100)^(años desde operation_date)` (años = días / 365,25; las ventas reducen el coste ajustado por coste medio). Rentabilidad real = (valor de mercado − coste ajustado) / coste ajustado. "Bate al IPC" si valor de mercado > coste ajustado.
+4. **Periodos y zona horaria**: los periodos mensuales se calculan en la zona IANA del cliente (`tz`, por defecto `Europe/Madrid`); los límites se convierten a UTC para consultar. Agregaciones con SQL portable (`SUM`/`GROUP BY`); la serie mensual se agrupa en Python.
+
+Endpoints: `GET /analytics/summary`, `/analytics/cashflow?date_from&date_to&tz&months`, `/analytics/inflation`, `/analytics/funds`. `GET /transactions` admite `date_from`, `date_to` (exclusivo), `type`, `category_id`, `limit`, `offset`.
 
 ---
 
@@ -153,7 +161,9 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
 | **Fase 3: Automatización** | Parser CSV bancario con deduplicación `import_hash` (SHA-256), endpoint Webhook móvil y módulo de Bot privado de Telegram (Webhook + Vercel Cron `/api/cron/daily-reminder`). | Subir dos veces el mismo CSV no duplica movimientos; el webhook registra gastos; el bot envía recordatorio diario y permite registrar desde chat. |
 | **Fase 4: Migración y Producción** | Migración de MySQL a Supabase (PostgreSQL + `psycopg`), configuración de secretos en Vercel/GitHub Actions y despliegue continuo completo. | Aplicación operando en producción bajo HTTPS con datos persistentes en Supabase y CI/CD automático. |
 
-**Estado Fase 1 (gate):** backend + frontend de núcleo implementados, CI creado (`.github/workflows/ci.yml`) y test de rollback mid-transfer añadido. **Pendiente para cerrar la fase:** primera ejecución del CI en verde en GitHub. Detalle operativo en [README.md](README.md) §3.1.
+**Estado Fase 1 (gate):** **APROBADA** — PR #1 fusionada en `main` con CI en verde (2026-11-27).
+
+**Estado Fase 2 (gate):** analytics, fondos/aportaciones, dashboard con Recharts y página de Inversiones implementados con tests (47 en verde). Pendiente: CI en verde en la PR y revisión del autor. Además se añadió la **PWA instalable** (lectura sin conexión, ver README).
 
 **Decisiones de Fase 1 (cierre):**
 - Solo se admite la divisa `EUR` (multidivisa fuera de alcance); las transferencias entre divisas distintas se rechazan.
