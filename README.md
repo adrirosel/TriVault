@@ -44,7 +44,7 @@ trivault/
 ├── CONTEXT.md                    # Arquitectura, modelo de datos y reglas de contexto para IA
 ├── README.md                     # Documentación principal del proyecto
 ├── .gitignore                    # Exclusión de secretos (.env), dependencias y builds
-├── .github/workflows/            # CI/CD (PENDIENTE: aún no hay ci.yml)
+├── .github/workflows/ci.yml      # CI: ruff, Alembic, Pytest y build del frontend
 ├── docs/
 │   └── especificacion-tecnica.md # Especificación funcional y técnica base
 ├── backend/                      # API REST en FastAPI + SQLAlchemy + Alembic
@@ -55,15 +55,26 @@ trivault/
 
 ## 3.1 Estado de Fase 1 y pendientes
 
-**Gate Fase 1: BLOQUEADA** (no avanzar a Fase 2 hasta cerrar el CI como mínimo).
+**Gate Fase 1: pendiente solo de ver el CI en verde en GitHub** (todo pasa en local).
 
 | Entregable | Estado |
 |---|---|
 | Backend (MySQL + Alembic, auth JWT, cuentas, categorías, transacciones/transferencias, `PATCH /auth/me`) | Completo |
-| Frontend (Vite + React + TS + Tailwind, login/register, dashboard overview, CRUD cuentas/categorías/transacciones) | Completo en `feat/frontend-core` |
-| CI GitHub Actions (Pytest + `tsc` / `vite build`) | **Pendiente** — falta `.github/workflows/ci.yml` |
-| Test de rollback mid-transfer (saldos intactos ante fallo) | **Pendiente** (soft-gap) |
+| Edición completa de movimientos (`PATCH /transactions/{id}`: importe, cuentas, categoría, tipo) con recálculo atómico | Completo |
+| Validación tipo de categoría = tipo de movimiento; solo divisa EUR | Completo |
+| Frontend (Vite + React + TS + Tailwind, login/register, dashboard overview, CRUD cuentas/categorías/transacciones) | Completo |
+| CI GitHub Actions (`.github/workflows/ci.yml`: ruff, round-trip Alembic, Pytest, `tsc` + `vite build`) | Creado — falta primera ejecución en GitHub |
+| Test de rollback mid-transfer (saldos intactos ante fallo) | Completo |
 | Recharts / analytics / fondos (Fase 2), CSV / Telegram (Fase 3), Supabase prod (Fase 4) | Fuera de alcance actual |
+
+### Tests y lint (backend)
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+ruff check .
+pytest            # usa TEST_DATABASE_URL (BD aislada, se vacía en cada ejecución)
+```
 
 ### Desarrollo local (frontend)
 
@@ -98,8 +109,8 @@ El despliegue está diseñado como un monorepo conectado a **Vercel**, **Supabas
    - En Fase 3, los recordatorios diarios se disparan con **Vercel Cron Jobs** sobre `/api/cron/daily-reminder`.
 3. **Base de datos en Supabase**:
    - Instancia PostgreSQL gestionada en producción, migrada desde el esquema versionado con Alembic.
-4. **Automatización con GitHub Actions** (**pendiente de implementar**):
-   - Objetivo: Pytest contra MySQL de test, typecheck y `vite build` en PRs / pushes a `develop` y `main`.
+4. **Automatización con GitHub Actions** (`.github/workflows/ci.yml`):
+   - Ruff, round-trip de migraciones Alembic, Pytest contra MySQL 8 de test, typecheck y `vite build` en PRs / pushes a `develop` y `main`.
    - CD a Vercel solo tras checks verdes; no fusionar trabajo de feature en ramas de deploy sin revisión.
 
 > **Seguridad**: ningún archivo `.env`, clave privada o credencial se sube al repositorio. Utiliza siempre los archivos `.env.example` como plantilla local.
