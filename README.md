@@ -91,6 +91,16 @@ npm install
 npm run dev              # http://127.0.0.1:5173
 ```
 
+### App instalable (PWA)
+
+El frontend es una **PWA** (`vite-plugin-pwa`): se puede instalar en el móvil ("Añadir a pantalla de inicio" en Safari iOS o "Instalar aplicación" en Chrome Android) y se abre a pantalla completa como una app nativa.
+
+- **Sin conexión**: la app carga desde caché y muestra los últimos datos consultados (solo lectura); las acciones que escriben se deshabilitan y aparece un aviso.
+- **Privacidad**: al cerrar sesión se borra del dispositivo la caché de datos de la API (`trivault-api-get`).
+- **Actualizaciones**: cuando hay una versión nueva aparece el aviso "Recargar".
+- El service worker solo se genera en el build: probar con `npm run build && npm run preview`. En el móvil requiere HTTPS (despliegue de Vercel).
+- Iconos: se generan desde `frontend/public/app-icon.svg` con `npx pwa-assets-generator`.
+
 En `backend/.env`, `ALLOWED_ORIGINS` debe incluir `http://127.0.0.1:5173` y/o `http://localhost:5173`.
 
 ---

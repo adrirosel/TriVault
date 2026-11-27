@@ -70,7 +70,7 @@ export function Dashboard() {
       {loading ? (
         <p className="num text-sm text-[var(--color-text-muted)] animate-pulse">Cargando…</p>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[5fr_7fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <section className="space-y-6">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)] mb-2">

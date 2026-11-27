@@ -34,7 +34,7 @@ export function Login() {
         <h1 className="heading-xl text-[var(--color-text)] mb-4">
           Tri<span className="text-[var(--color-accent)]">Vault</span>
         </h1>
-        <p className="prose-narrow text-[var(--color-text-muted)] text-base leading-relaxed">
+        <p className="prose-narrow text-[var(--color-text-muted)] text-[1rem] leading-relaxed">
           Controla tus tres cubos: liquidez diaria, colchón de emergencia e inversión en un solo sitio.
         </p>
       </section>
@@ -59,7 +59,7 @@ export function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button type="submit" loading={loading} className="w-full">
+          <Button requiresNetwork type="submit" loading={loading} className="w-full">
             Entrar
           </Button>
           <p className="text-sm text-[var(--color-text-muted)]">

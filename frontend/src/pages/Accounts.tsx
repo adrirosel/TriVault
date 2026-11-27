@@ -123,7 +123,7 @@ export function Accounts() {
       {loading ? (
         <p className="num text-sm text-[var(--color-text-muted)] animate-pulse">Cargando…</p>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[7fr_5fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <section>
             {accounts.length === 0 ? (
               <p className="prose-narrow text-sm text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl px-5 py-8">
@@ -178,10 +178,10 @@ export function Accounts() {
                   </p>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button type="button" variant="ghost" onClick={() => startEdit(selected)}>
+                  <Button requiresNetwork type="button" variant="ghost" onClick={() => startEdit(selected)}>
                     Editar
                   </Button>
-                  <Button type="button" variant="danger" onClick={() => void onDelete(selected.id)}>
+                  <Button requiresNetwork type="button" variant="danger" onClick={() => void onDelete(selected.id)}>
                     Eliminar
                   </Button>
                 </div>
@@ -224,7 +224,7 @@ export function Accounts() {
                   onChange={(e) => setForm((f) => ({ ...f, initial_balance: e.target.value }))}
                 />
               )}
-              <Button type="submit" loading={saving} className="w-full">
+              <Button requiresNetwork type="submit" loading={saving} className="w-full">
                 {editingId !== null ? 'Guardar cambios' : 'Crear cuenta'}
               </Button>
             </form>

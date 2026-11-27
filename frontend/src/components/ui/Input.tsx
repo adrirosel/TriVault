@@ -17,7 +17,7 @@ export function Input({ label, error, hint, className = '', ...props }: Props) {
       <input
         {...props}
         className={[
-          'w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-sm',
+          'w-full rounded-lg border bg-[var(--color-surface)] px-3 py-2 text-[1rem] md:text-sm',
           'text-[var(--color-text)] placeholder-[var(--color-text-muted)]',
           'transition-all duration-150 ease-out outline-none',
           error
