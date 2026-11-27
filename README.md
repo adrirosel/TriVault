@@ -44,12 +44,54 @@ trivault/
 ├── CONTEXT.md                    # Arquitectura, modelo de datos y reglas de contexto para IA
 ├── README.md                     # Documentación principal del proyecto
 ├── .gitignore                    # Exclusión de secretos (.env), dependencias y builds
-├── .github/workflows/            # Pipelines de CI/CD con GitHub Actions
+├── .github/workflows/ci.yml      # CI: ruff, Alembic, Pytest y build del frontend
 ├── docs/
 │   └── especificacion-tecnica.md # Especificación funcional y técnica base
 ├── backend/                      # API REST en FastAPI + SQLAlchemy + Alembic
-└── frontend/                     # SPA en React + Vite + TypeScript + Tailwind + Recharts
+└── frontend/                     # SPA en React + Vite + TypeScript + Tailwind
 ```
+
+---
+
+## 3.1 Estado de Fase 1 y pendientes
+
+**Gate Fase 1: pendiente solo de ver el CI en verde en GitHub** (todo pasa en local).
+
+| Entregable | Estado |
+|---|---|
+| Backend (MySQL + Alembic, auth JWT, cuentas, categorías, transacciones/transferencias, `PATCH /auth/me`) | Completo |
+| Edición completa de movimientos (`PATCH /transactions/{id}`: importe, cuentas, categoría, tipo) con recálculo atómico | Completo |
+| Validación tipo de categoría = tipo de movimiento; solo divisa EUR | Completo |
+| Frontend (Vite + React + TS + Tailwind, login/register, dashboard overview, CRUD cuentas/categorías/transacciones) | Completo |
+| CI GitHub Actions (`.github/workflows/ci.yml`: ruff, round-trip Alembic, Pytest, `tsc` + `vite build`) | Creado — falta primera ejecución en GitHub |
+| Test de rollback mid-transfer (saldos intactos ante fallo) | Completo |
+| Recharts / analytics / fondos (Fase 2), CSV / Telegram (Fase 3), Supabase prod (Fase 4) | Fuera de alcance actual |
+
+### Tests y lint (backend)
+
+```bash
+cd backend
+pip install -r requirements.txt -r requirements-dev.txt
+ruff check .
+pytest            # usa TEST_DATABASE_URL (BD aislada, se vacía en cada ejecución)
+```
+
+### Desarrollo local (frontend)
+
+```bash
+# MySQL (Docker) + API
+docker compose up -d
+cd backend && .venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# SPA (proxy /api -> :8000; host IPv4)
+cd frontend
+copy .env.example .env   # VITE_API_URL vacío usa el proxy de Vite
+npm install
+npm run dev              # http://127.0.0.1:5173
+```
+
+En `backend/.env`, `ALLOWED_ORIGINS` debe incluir `http://127.0.0.1:5173` y/o `http://localhost:5173`.
 
 ---
 
@@ -67,9 +109,9 @@ El despliegue está diseñado como un monorepo conectado a **Vercel**, **Supabas
    - En Fase 3, los recordatorios diarios se disparan con **Vercel Cron Jobs** sobre `/api/cron/daily-reminder`.
 3. **Base de datos en Supabase**:
    - Instancia PostgreSQL gestionada en producción, migrada desde el esquema versionado con Alembic.
-4. **Automatización con GitHub Actions**:
-   - Ejecución automática de tests (Pytest), comprobación de tipos y build de frontend en cada Pull Request / integración.
-   - Disparo automatizado del despliegue hacia Vercel una vez superadas las validaciones.
+4. **Automatización con GitHub Actions** (`.github/workflows/ci.yml`):
+   - Ruff, round-trip de migraciones Alembic, Pytest contra MySQL 8 de test, typecheck y `vite build` en PRs / pushes a `develop` y `main`.
+   - CD a Vercel solo tras checks verdes; no fusionar trabajo de feature en ramas de deploy sin revisión.
 
 > **Seguridad**: ningún archivo `.env`, clave privada o credencial se sube al repositorio. Utiliza siempre los archivos `.env.example` como plantilla local.
 

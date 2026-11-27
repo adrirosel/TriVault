@@ -48,7 +48,43 @@ Especificación Técnica — Gestor de Finanzas Personales
 
 Page 2 of 6 
 
-gestor-finanzas-personales/ ├── README.md                      # Documentación técnica, arquitectura y guía de despliegue ├── .gitignore                     # Exclusión de entornos virtuales, node_modules y .env ├── backend/                       # Aplicación servidor en Python + FastAPI │ ├── app/ │ │ ├── main.py                # Punto de entrada FastAPI, configuración CORS y middlewares │ │ ├── core/ │ │ │ ├── config.py          # Gestión de variables de entorno (Pydantic BaseSettings) │ │ │ ├── database.py        # Motor SQLAlchemy, sesión y abstracción MySQL -> Supabase │ │ │ └── security.py        # Hashing de contraseñas (bcrypt) y generación/validación JWT │ │ ├── models/                # Modelos ORM (User, Account, Category, Transaction, FundPosition) │ │ ├── schemas/               # Esquemas Pydantic para validación de Request y Response │ │ ├── api/ │ │ │ ├── deps.py            # Dependencias inyectables (get_db, get_current_user) │ │ │ └── routes/            # Endpoints organizados por dominio (auth, accounts, transactions, analytics, imports) │ │ └── services/              # Lógica de negocio pura (cálculo inflación, parser CSV, agregaciones) │ ├── alembic/                   # Historial de migraciones de esquema de base de datos │ ├── tests/                     # Pruebas unitarias y de integración con Pytest │ ├── requirements.txt           # Dependencias fijadas de Python │ └── vercel.json                # Configuración de enrutamiento para despliegue serverless en Vercel └── frontend/                      # Aplicación cliente en React + Vite + TypeScript ├── public/                    # Activos estáticos ├── src/ │ ├── api/                   # Cliente HTTP centralizado (Axios/Fetch) con interceptores JWT │ ├── types/                 # Definiciones TypeScript estrictas alineadas con los esquemas FastAPI │ ├── context/               # Contexto global de autenticación y estado de sesión │ ├── components/            # Componentes reutilizables de interfaz (tablas, formularios, tarjetas KPI) │ ├── pages/                 # Vistas principales (Login, Register, Dashboard, Cuentas, Inversiones, ImportarCSV) │ ├── utils/                 # Formateadores de moneda (EUR), fechas y validaciones locales │ ├── App.tsx                # Enrutamiento protegido y estructura de navegación │ └── main.tsx               # Punto de montaje de React ├── index.html ├── package.json ├── tsconfig.json └── vite.config.ts 
+```text
+gestor-finanzas-personales/
+├── README.md                      # Documentación técnica, arquitectura y guía de despliegue
+├── .gitignore                     # Exclusión de entornos virtuales, node_modules y .env
+├── backend/                       # Aplicación servidor en Python + FastAPI
+│   ├── app/
+│   │   ├── main.py                # Punto de entrada FastAPI, configuración CORS y middlewares
+│   │   ├── core/
+│   │   │   ├── config.py          # Gestión de variables de entorno (Pydantic BaseSettings)
+│   │   │   ├── database.py        # Motor SQLAlchemy, sesión y abstracción MySQL -> Supabase
+│   │   │   └── security.py        # Hashing de contraseñas (bcrypt) y generación/validación JWT
+│   │   ├── models/                # Modelos ORM (User, Account, Category, Transaction, FundPosition)
+│   │   ├── schemas/               # Esquemas Pydantic para validación de Request y Response
+│   │   ├── api/
+│   │   │   ├── deps.py            # Dependencias inyectables (get_db, get_current_user)
+│   │   │   └── routes/            # Endpoints organizados por dominio (auth, accounts, transactions, analytics, imports)
+│   │   └── services/              # Lógica de negocio pura (cálculo inflación, parser CSV, agregaciones)
+│   ├── alembic/                   # Historial de migraciones de esquema de base de datos
+│   ├── tests/                     # Pruebas unitarias y de integración con Pytest
+│   ├── requirements.txt           # Dependencias fijadas de Python
+│   └── vercel.json                # Configuración de enrutamiento para despliegue serverless en Vercel
+└── frontend/                      # Aplicación cliente en React + Vite + TypeScript
+    ├── public/                    # Activos estáticos
+    ├── src/
+    │   ├── api/                   # Cliente HTTP centralizado (Axios/Fetch) con interceptores JWT
+    │   ├── types/                 # Definiciones TypeScript estrictas alineadas con los esquemas FastAPI
+    │   ├── context/               # Contexto global de autenticación y estado de sesión
+    │   ├── components/            # Componentes reutilizables de interfaz (tablas, formularios, tarjetas KPI)
+    │   ├── pages/                 # Vistas principales (Login, Register, Dashboard, Cuentas, Inversiones, ImportarCSV)
+    │   ├── utils/                 # Formateadores de moneda (EUR), fechas y validaciones locales
+    │   ├── App.tsx                # Enrutamiento protegido y estructura de navegación
+    │   └── main.tsx               # Punto de montaje de React
+    ├── index.html
+    ├── package.json
+    ├── tsconfig.json
+    └── vite.config.ts
+```
 
 Especificación Técnica — Gestor de Finanzas Personales 
 

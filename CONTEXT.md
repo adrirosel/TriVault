@@ -12,6 +12,8 @@
 4. **Seguridad como prioridad**:
    - Toda consulta de lectura, escritura o borrado en BD debe filtrar obligatoriamente por `user_id` extraído del token JWT validado (nunca confiar en IDs enviados por el cliente sin verificar propiedad).
    - Nunca subir archivos `.env`, tokens, contraseñas ni claves al repositorio. Mantener `.env.example` sin valores sensibles.
+5. **Retrospectiva obligatoria de fin de fase (Phase Gate)**:
+   - Siempre que se considere terminada una fase (o antes de proponer/iniciar trabajo de la siguiente), la IA debe invocar la skill `.agents/skills/phase-gate-review/SKILL.md` y ejecutar una auditoría formal de entregables, seguridad, invariantes financieras, migraciones y tests para confirmar si se puede avanzar con garantías o si quedan brechas por cerrar.
 
 ---
 
@@ -151,6 +153,14 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
 | **Fase 3: Automatización** | Parser CSV bancario con deduplicación `import_hash` (SHA-256), endpoint Webhook móvil y módulo de Bot privado de Telegram (Webhook + Vercel Cron `/api/cron/daily-reminder`). | Subir dos veces el mismo CSV no duplica movimientos; el webhook registra gastos; el bot envía recordatorio diario y permite registrar desde chat. |
 | **Fase 4: Migración y Producción** | Migración de MySQL a Supabase (PostgreSQL + `psycopg`), configuración de secretos en Vercel/GitHub Actions y despliegue continuo completo. | Aplicación operando en producción bajo HTTPS con datos persistentes en Supabase y CI/CD automático. |
 
+**Estado Fase 1 (gate):** backend + frontend de núcleo implementados, CI creado (`.github/workflows/ci.yml`) y test de rollback mid-transfer añadido. **Pendiente para cerrar la fase:** primera ejecución del CI en verde en GitHub. Detalle operativo en [README.md](README.md) §3.1.
+
+**Decisiones de Fase 1 (cierre):**
+- Solo se admite la divisa `EUR` (multidivisa fuera de alcance); las transferencias entre divisas distintas se rechazan.
+- `PATCH /transactions/{id}` permite editar todos los campos; el servicio revierte el efecto antiguo y aplica el nuevo en una única transacción, bloqueando las cuentas implicadas en orden de `id`.
+- La categoría de un movimiento debe ser del mismo tipo (`income`/`expense`) que el movimiento.
+- Todas las fechas se almacenan y devuelven en UTC con offset explícito (MySQL `DATETIME` no guarda zona).
+
 ---
 
 ## 8. Flujo de Trabajo Git y CI/CD
@@ -163,5 +173,5 @@ Todas las tablas de negocio incluyen `user_id` para garantizar aislamiento estri
   - Commits frecuentes, atómicos y con mensajes explícitos siguiendo Conventional Commits (`feat:`, `fix:`, `sec:`, `docs:`, `test:`, `refactor:`, `chore:`).
   - Etiquetas (tags) semánticas periódicas en `main` al cerrar hitos o fases (`v0.1.0`, `v0.2.0`, etc.).
 - **GitHub Actions**:
-  - CI automático en Pull Requests y pushes a `develop` / `main` (Pytest + linting + `tsc` / `vite build`).
-  - CD automático para desplegar a Vercel tras superar los checks.
+  - CI automático en Pull Requests y pushes a `develop` / `main` (`.github/workflows/ci.yml`: ruff + round-trip Alembic + Pytest contra MySQL 8 + `tsc` / `vite build`).
+  - CD automático para desplegar a Vercel tras superar los checks (no mergear features directamente en ramas de deploy sin revisión).
