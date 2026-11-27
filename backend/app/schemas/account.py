@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import BucketType
 
+SUPPORTED_CURRENCIES = frozenset({"EUR"})
+
 
 class AccountCreate(BaseModel):
     """Payload to create a new bucket account."""
@@ -35,10 +37,10 @@ class AccountCreate(BaseModel):
     @field_validator("currency")
     @classmethod
     def normalize_currency(cls, value: str) -> str:
-        """Normalize ISO currency code to uppercase."""
+        """Normalize ISO currency code; only EUR is supported until multi-currency is designed."""
         cleaned = value.strip().upper()
-        if len(cleaned) != 3 or not cleaned.isalpha():
-            raise ValueError("La divisa debe ser un código ISO de 3 letras (p. ej. EUR).")
+        if cleaned not in SUPPORTED_CURRENCIES:
+            raise ValueError("Por ahora solo se admite la divisa EUR.")
         return cleaned
 
 

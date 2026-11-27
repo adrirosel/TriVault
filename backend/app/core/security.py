@@ -1,6 +1,6 @@
 """Password hashing with bcrypt and JWT token handling with PyJWT."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -55,7 +55,7 @@ def create_access_token(
 ) -> str:
     """Generate a signed HS256 JWT access token for a given user ID."""
     settings = get_settings()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + (
         expires_delta
         if expires_delta is not None

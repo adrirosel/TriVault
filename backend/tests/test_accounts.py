@@ -1,6 +1,6 @@
 """Accounts CRUD, Decimal precision, balance invariants, and IDOR negative tests."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
@@ -52,6 +52,26 @@ def test_create_three_buckets_with_decimal_precision(client: TestClient) -> None
         headers=headers,
     )
     assert neg_resp.status_code == 422
+
+
+def test_only_eur_currency_is_accepted(client: TestClient) -> None:
+    """Multi-currency is out of scope: non-EUR accounts are rejected, lowercase eur is normalized."""
+    headers = _register_and_get_headers(client, "currency@example.com")
+
+    usd = client.post(
+        "/api/v1/accounts",
+        json={"name": "USD", "bucket_type": "daily", "currency": "USD"},
+        headers=headers,
+    )
+    assert usd.status_code == 422
+
+    eur = client.post(
+        "/api/v1/accounts",
+        json={"name": "EUR", "bucket_type": "daily", "currency": "eur"},
+        headers=headers,
+    )
+    assert eur.status_code == 201
+    assert eur.json()["currency"] == "EUR"
 
 
 def test_patch_account_blocks_direct_balance_modification(client: TestClient) -> None:
@@ -145,7 +165,7 @@ def test_delete_account_blocks_when_history_exists_and_allows_when_empty(
         amount=Decimal("50.00"),
         type=TransactionType.INCOME,
         description="Ingreso prueba",
-        transaction_date=datetime.now(timezone.utc),
+        transaction_date=datetime.now(UTC),
     )
     db_session.add(tx)
     db_session.commit()

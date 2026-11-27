@@ -1,7 +1,7 @@
 """Pytest configuration and isolated database fixtures."""
 
-from collections.abc import Generator
 import os
+from collections.abc import Generator
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -25,8 +25,8 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ALLOWED_ORIGINS", '["http://localhost:5173"]')
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 

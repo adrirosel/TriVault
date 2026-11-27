@@ -11,6 +11,7 @@ from app.services.transaction_service import (
     AccountNotFoundOrForbiddenError,
     CategoryForbiddenError,
     TransactionNotFoundError,
+    TransactionRuleError,
     create_transaction,
     delete_transaction,
     get_transaction_for_user,
@@ -19,6 +20,15 @@ from app.services.transaction_service import (
 )
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
+
+_NOT_FOUND_ERRORS = (TransactionNotFoundError, AccountNotFoundOrForbiddenError, CategoryForbiddenError)
+
+
+def _to_http(exc: Exception) -> HTTPException:
+    """Map domain errors to HTTP: foreign/missing resources -> 404 (never 403), rule violations -> 422."""
+    if isinstance(exc, _NOT_FOUND_ERRORS):
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
 
 
 @router.get("", response_model=list[TransactionOut])
@@ -38,8 +48,8 @@ def create_user_transaction(
 ) -> Transaction:
     try:
         return create_transaction(db, current_user.id, payload)
-    except (AccountNotFoundOrForbiddenError, CategoryForbiddenError) as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (*_NOT_FOUND_ERRORS, TransactionRuleError) as exc:
+        raise _to_http(exc) from exc
 
 
 @router.get("/{tx_id}", response_model=TransactionOut)
@@ -51,7 +61,7 @@ def read_transaction(
     try:
         return get_transaction_for_user(db, tx_id, current_user.id)
     except TransactionNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise _to_http(exc) from exc
 
 
 @router.patch("/{tx_id}", response_model=TransactionOut)
@@ -63,8 +73,8 @@ def patch_transaction(
 ) -> Transaction:
     try:
         return update_transaction(db, tx_id, current_user.id, payload)
-    except TransactionNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (*_NOT_FOUND_ERRORS, TransactionRuleError) as exc:
+        raise _to_http(exc) from exc
 
 
 @router.delete("/{tx_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -75,8 +85,6 @@ def remove_transaction(
 ) -> Response:
     try:
         delete_transaction(db, tx_id, current_user.id)
-    except TransactionNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except AccountNotFoundOrForbiddenError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except _NOT_FOUND_ERRORS as exc:
+        raise _to_http(exc) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,5 +1,7 @@
 """Category CRUD and IDOR negative tests."""
 
+from datetime import UTC
+
 from fastapi.testclient import TestClient
 
 
@@ -50,17 +52,17 @@ def test_delete_category_blocked_when_has_transactions(
     client: TestClient,
 ) -> None:
     """Cannot delete a category that has linked transactions; deletes fine when empty."""
-    from datetime import datetime, timezone
-    from decimal import Decimal
-    from sqlalchemy.orm import Session
-    from app.models.enums import TransactionType
+    from datetime import datetime
+
 
     h = _auth_headers(client, "catdelete@example.com")
-    me = client.get("/api/v1/auth/me", headers=h).json()
-    user_id = me["id"]
 
     # Create account and two categories
-    acc = client.post("/api/v1/accounts", json={"name": "Diaria", "bucket_type": "daily", "initial_balance": "200.00"}, headers=h).json()
+    acc = client.post(
+        "/api/v1/accounts",
+        json={"name": "Diaria", "bucket_type": "daily", "initial_balance": "200.00"},
+        headers=h,
+    ).json()
     cat_used = client.post("/api/v1/categories", json={"name": "Supermercado", "type": "expense"}, headers=h).json()
     cat_empty = client.post("/api/v1/categories", json={"name": "Viajes", "type": "expense"}, headers=h).json()
 
@@ -70,7 +72,7 @@ def test_delete_category_blocked_when_has_transactions(
         "amount": "50.00",
         "type": "expense",
         "category_id": cat_used["id"],
-        "transaction_date": datetime.now(timezone.utc).isoformat(),
+        "transaction_date": datetime.now(UTC).isoformat(),
     }
     tx = client.post("/api/v1/transactions", json=tx_payload, headers=h)
     assert tx.status_code == 201
