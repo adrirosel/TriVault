@@ -34,7 +34,7 @@ export function Register() {
         <h1 className="heading-xl text-[var(--color-text)] mb-4">
           Tri<span className="text-[var(--color-accent)]">Vault</span>
         </h1>
-        <p className="prose-narrow text-[var(--color-text-muted)] text-base leading-relaxed">
+        <p className="prose-narrow text-[var(--color-text-muted)] text-[1rem] leading-relaxed">
           Empieza tu estructura: cubos Diario, Emergencia e Inversión. Todo en EUR, con
           transferencias entre cubos.
         </p>
@@ -62,7 +62,7 @@ export function Register() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button type="submit" loading={loading} className="w-full">
+          <Button requiresNetwork type="submit" loading={loading} className="w-full">
             Crear cuenta
           </Button>
           <p className="text-sm text-[var(--color-text-muted)]">

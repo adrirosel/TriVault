@@ -169,19 +169,19 @@ export function Transactions() {
       {loading ? (
         <p className="num text-sm text-[var(--color-text-muted)] animate-pulse">Cargando…</p>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[7fr_5fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <section>
             {transactions.length === 0 ? (
               <p className="prose-narrow text-sm text-[var(--color-text-muted)] border border-[var(--color-border)] rounded-xl px-5 py-8">
                 Sin movimientos este mes — registra el primero.
               </p>
             ) : (
-              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-[var(--color-base)] border-b border-[var(--color-border)]">
                     <tr className="text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                       <th className="px-3 py-2 font-medium">Fecha</th>
-                      <th className="px-3 py-2 font-medium">Tipo</th>
+                      <th className="hidden sm:table-cell px-3 py-2 font-medium">Tipo</th>
                       <th className="px-3 py-2 font-medium">Detalle</th>
                       <th className="px-3 py-2 font-medium text-right">Importe</th>
                       <th className="px-3 py-2 font-medium text-right"> </th>
@@ -193,7 +193,7 @@ export function Transactions() {
                         <td className="px-3 py-2 num text-xs text-[var(--color-text-muted)] whitespace-nowrap">
                           {formatDate(tx.transaction_date)}
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="hidden sm:table-cell px-3 py-2">
                           <Badge variant={tx.type} />
                         </td>
                         <td className="px-3 py-2 min-w-0">
@@ -220,11 +220,11 @@ export function Transactions() {
                           {tx.type === 'expense' ? '−' : tx.type === 'income' ? '+' : ''}
                           {formatEUR(tx.amount)}
                         </td>
-                        <td className="px-3 py-2 text-right whitespace-nowrap space-x-2">
-                          <Button type="button" variant="ghost" onClick={() => startEdit(tx)}>
+                        <td className="px-3 py-2 text-right whitespace-nowrap space-x-1 sm:space-x-2">
+                          <Button requiresNetwork type="button" variant="ghost" onClick={() => startEdit(tx)}>
                             Editar
                           </Button>
-                          <Button type="button" variant="danger" onClick={() => void onDelete(tx.id)}>
+                          <Button requiresNetwork type="button" variant="danger" onClick={() => void onDelete(tx.id)}>
                             Eliminar
                           </Button>
                         </td>
@@ -236,7 +236,8 @@ export function Transactions() {
             )}
           </section>
 
-          <section>
+          {/* On phones the quick-entry form comes first; on desktop it sits to the right. */}
+          <section className="order-first lg:order-none">
             <form
               onSubmit={onSubmit}
               className="border border-[var(--color-border)] rounded-xl p-5 bg-[var(--color-surface)] space-y-4"
@@ -313,6 +314,7 @@ export function Transactions() {
               />
 
               <Button
+                requiresNetwork
                 type="submit"
                 loading={saving}
                 className="w-full"

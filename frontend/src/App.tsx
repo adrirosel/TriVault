@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Accounts } from '@/pages/Accounts'
 import { Categories } from '@/pages/Categories'
 import { Transactions } from '@/pages/Transactions'
+import { Investments } from '@/pages/Investments'
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/cuentas" element={<Accounts />} />
         <Route path="/categorias" element={<Categories />} />
         <Route path="/transacciones" element={<Transactions />} />
+        <Route path="/inversiones" element={<Investments />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

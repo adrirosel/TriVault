@@ -7,8 +7,7 @@ Every write path (create / update / delete) follows the same pattern:
 3. Commit once. Any exception rolls the whole unit of work back explicitly.
 """
 
-from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -23,13 +22,14 @@ from app.schemas.transaction import (
     TransactionUpdate,
     validate_transaction_shape,
 )
+from app.services._uow import AccountNotFoundOrForbiddenError
+from app.services._uow import lock_accounts as _lock_accounts
+from app.services._uow import unit_of_work as _unit_of_work
+
+__all__ = ["AccountNotFoundOrForbiddenError"]  # re-exported for routes
 
 
 class TransactionNotFoundError(Exception):
-    pass
-
-
-class AccountNotFoundOrForbiddenError(Exception):
     pass
 
 
@@ -39,35 +39,6 @@ class CategoryForbiddenError(Exception):
 
 class TransactionRuleError(Exception):
     """Business-rule violation (category type mismatch, currency mismatch, invalid shape)."""
-
-
-@contextmanager
-def _unit_of_work(db: Session) -> Iterator[None]:
-    """Commit on success, roll back explicitly on any failure."""
-    try:
-        yield
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-
-
-def _lock_accounts(db: Session, account_ids: Iterable[int | None], user_id: int) -> dict[int, Account]:
-    """Lock all given accounts owned by user_id (ordered by id) and return them by id."""
-    ids = sorted({account_id for account_id in account_ids if account_id is not None})
-    stmt = (
-        select(Account)
-        .where(Account.id.in_(ids), Account.user_id == user_id)
-        .order_by(Account.id)
-        .with_for_update()
-    )
-    accounts = {account.id: account for account in db.scalars(stmt).all()}
-    missing = [account_id for account_id in ids if account_id not in accounts]
-    if missing:
-        raise AccountNotFoundOrForbiddenError(
-            f"Cuenta {missing[0]} no encontrada o no pertenece al usuario."
-        )
-    return accounts
 
 
 def _verify_category(db: Session, category_id: int, user_id: int, tx_type: TransactionType) -> None:
@@ -114,12 +85,38 @@ def list_transactions(
     db: Session,
     user_id: int,
     account_id: int | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    tx_type: TransactionType | None = None,
+    category_id: int | None = None,
+    limit: int | None = None,
+    offset: int = 0,
 ) -> list[Transaction]:
+    """List the user's movements, newest first. ``date_to`` is exclusive."""
     stmt = select(Transaction).where(Transaction.user_id == user_id)
     if account_id is not None:
-        stmt = stmt.where(Transaction.account_id == account_id)
-    stmt = stmt.order_by(Transaction.transaction_date.desc(), Transaction.id.desc())
+        stmt = stmt.where(
+            (Transaction.account_id == account_id) | (Transaction.destination_account_id == account_id)
+        )
+    if date_from is not None:
+        stmt = stmt.where(Transaction.transaction_date >= _naive_utc(date_from))
+    if date_to is not None:
+        stmt = stmt.where(Transaction.transaction_date < _naive_utc(date_to))
+    if tx_type is not None:
+        stmt = stmt.where(Transaction.type == tx_type)
+    if category_id is not None:
+        stmt = stmt.where(Transaction.category_id == category_id)
+    stmt = stmt.order_by(Transaction.transaction_date.desc(), Transaction.id.desc()).offset(offset)
+    if limit is not None:
+        stmt = stmt.limit(limit)
     return list(db.scalars(stmt).all())
+
+
+def _naive_utc(value: datetime) -> datetime:
+    """MySQL DATETIME stores naive UTC; compare with naive UTC values (also valid on PostgreSQL)."""
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(UTC).replace(tzinfo=None)
 
 
 def get_transaction_for_user(db: Session, tx_id: int, user_id: int) -> Transaction:

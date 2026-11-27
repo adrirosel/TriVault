@@ -104,7 +104,7 @@ export function Categories() {
       {loading ? (
         <p className="num text-sm text-[var(--color-text-muted)] animate-pulse">Cargando…</p>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[7fr_5fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
           <section className="space-y-4">
             <div className="flex gap-2 flex-wrap">
               {(
@@ -136,7 +136,7 @@ export function Categories() {
                 No hay categorías en este filtro. Crea una a la derecha.
               </p>
             ) : (
-              <div className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+              <div className="border border-[var(--color-border)] rounded-xl overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-[var(--color-base)] border-b border-[var(--color-border)]">
                     <tr className="text-left text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -161,10 +161,11 @@ export function Categories() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-2">
-                            <Button type="button" variant="ghost" onClick={() => startEdit(cat)}>
+                            <Button requiresNetwork type="button" variant="ghost" onClick={() => startEdit(cat)}>
                               Editar
                             </Button>
                             <Button
+                              requiresNetwork
                               type="button"
                               variant="danger"
                               onClick={() => void onDelete(cat.id)}
@@ -216,7 +217,7 @@ export function Categories() {
                     Cancelar
                   </Button>
                 )}
-                <Button type="submit" loading={saving} className="flex-1">
+                <Button requiresNetwork type="submit" loading={saving} className="flex-1">
                   {editingId !== null ? 'Guardar' : 'Crear categoría'}
                 </Button>
               </div>
