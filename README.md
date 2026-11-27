@@ -53,19 +53,18 @@ trivault/
 
 ---
 
-## 3.1 Estado de Fase 1 y pendientes
+## 3.1 Estado de las fases
 
-**Gate Fase 1: pendiente solo de ver el CI en verde en GitHub** (todo pasa en local).
+**Fase 1: APROBADA** (PR #1, CI en verde). **Fase 2: implementada**, pendiente de CI en su PR y revisión.
 
 | Entregable | Estado |
 |---|---|
-| Backend (MySQL + Alembic, auth JWT, cuentas, categorías, transacciones/transferencias, `PATCH /auth/me`) | Completo |
-| Edición completa de movimientos (`PATCH /transactions/{id}`: importe, cuentas, categoría, tipo) con recálculo atómico | Completo |
-| Validación tipo de categoría = tipo de movimiento; solo divisa EUR | Completo |
-| Frontend (Vite + React + TS + Tailwind, login/register, dashboard overview, CRUD cuentas/categorías/transacciones) | Completo |
-| CI GitHub Actions (`.github/workflows/ci.yml`: ruff, round-trip Alembic, Pytest, `tsc` + `vite build`) | Creado — falta primera ejecución en GitHub |
-| Test de rollback mid-transfer (saldos intactos ante fallo) | Completo |
-| Recharts / analytics / fondos (Fase 2), CSV / Telegram (Fase 3), Supabase prod (Fase 4) | Fuera de alcance actual |
+| Fase 1 — Backend núcleo, auth JWT, cuentas, categorías, transacciones/transferencias atómicas, edición completa, CI | Completo |
+| PWA instalable con lectura sin conexión y layout móvil | Completo |
+| Fase 2 — Fondos indexados (`/funds`, aportaciones compra/venta, efectivo del bróker, posiciones históricas) | Completo |
+| Fase 2 — Analytics (`/analytics/summary`, `/cashflow`, `/inflation`, `/funds`) + filtros en `GET /transactions` | Completo |
+| Fase 2 — Dashboard con Recharts (reparto por cubo, ingresos vs gastos, gasto por categoría, inflación, fondos) y página Inversiones | Completo |
+| CSV / Webhook / Telegram (Fase 3), Supabase prod (Fase 4) | Fuera de alcance actual |
 
 ### Tests y lint (backend)
 

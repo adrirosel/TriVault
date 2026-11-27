@@ -60,4 +60,14 @@ export const NAV_LINKS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    to: '/inversiones',
+    label: 'Inversión',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 17l6-6 4 4 8-8" />
+        <path d="M15 7h6v6" />
+      </svg>
+    ),
+  },
 ]

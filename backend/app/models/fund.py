@@ -3,7 +3,19 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+    func,
+    true,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -14,6 +26,9 @@ class FundPosition(Base):
     """Indexed fund holding linked to an investment account."""
 
     __tablename__ = "fund_positions"
+    __table_args__ = (
+        UniqueConstraint("user_id", "account_id", "isin", name="uq_fund_positions_user_account_isin"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -66,6 +81,12 @@ class FundContribution(Base):
     """Individual buy/sell contribution for accurate fund performance and inflation tracking."""
 
     __tablename__ = "fund_contributions"
+    __table_args__ = (
+        CheckConstraint("shares > 0", name="ck_fund_contributions_shares_positive"),
+        CheckConstraint("purchase_nav > 0", name="ck_fund_contributions_nav_positive"),
+        CheckConstraint("gross_amount > 0", name="ck_fund_contributions_gross_positive"),
+        CheckConstraint("fee >= 0", name="ck_fund_contributions_fee_non_negative"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
@@ -93,6 +114,13 @@ class FundContribution(Base):
         server_default="0.00",
     )
     notes: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # False for historical positions bought before using TriVault: no cash is moved.
+    affects_cash: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=true(),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

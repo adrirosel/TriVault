@@ -1,9 +1,12 @@
 """Transaction CRUD routes with atomic balance updates."""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
+from app.models.enums import TransactionType
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.schemas.transaction import TransactionCreate, TransactionOut, TransactionUpdate
@@ -33,11 +36,27 @@ def _to_http(exc: Exception) -> HTTPException:
 
 @router.get("", response_model=list[TransactionOut])
 def read_transactions(
-    account_id: int | None = Query(default=None),
+    account_id: int | None = Query(default=None, description="Origen o destino"),
+    date_from: datetime | None = Query(default=None, description="Inclusivo (ISO 8601, con zona)"),
+    date_to: datetime | None = Query(default=None, description="Exclusivo (ISO 8601, con zona)"),
+    type: TransactionType | None = Query(default=None),
+    category_id: int | None = Query(default=None),
+    limit: int | None = Query(default=None, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[Transaction]:
-    return list_transactions(db, current_user.id, account_id=account_id)
+    return list_transactions(
+        db,
+        current_user.id,
+        account_id=account_id,
+        date_from=date_from,
+        date_to=date_to,
+        tx_type=type,
+        category_id=category_id,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @router.post("", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)

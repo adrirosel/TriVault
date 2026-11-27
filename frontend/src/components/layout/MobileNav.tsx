@@ -8,7 +8,7 @@ export function MobileNav() {
       aria-label="Navegación principal"
       className="md:hidden fixed inset-x-0 bottom-0 z-20 border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[env(safe-area-inset-bottom)]"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {NAV_LINKS.map(({ to, label, icon }) => (
           <li key={to}>
             <NavLink
