@@ -314,3 +314,18 @@ def test_update_with_foreign_resources_or_nulls_is_rejected(client: TestClient) 
 
     assert _balance(client, h_a, acc_a["id"]) == Decimal("450.00")
     assert _balance(client, h_b, acc_b["id"]) == Decimal("500.00")
+
+
+def test_transaction_dates_are_returned_as_utc_with_offset(client: TestClient) -> None:
+    """MySQL DATETIME drops the timezone; the API must still return explicit UTC so browsers don't shift it."""
+    h = _auth_headers(client, "txutc@example.com")
+    acc = _make_account(client, h, "Cuenta", "daily", "100.00")
+    cat = _make_category(client, h, "Cafe", "expense")
+    tx = _post_tx(
+        client, h, account_id=acc["id"], amount="2.00", type="expense", category_id=cat["id"],
+        transaction_date="2026-11-27T11:30:00+01:00",
+    )
+    fetched = client.get(f"/api/v1/transactions/{tx['id']}", headers=h).json()
+    stored = datetime.fromisoformat(fetched["transaction_date"].replace("Z", "+00:00"))
+    assert stored.utcoffset() is not None
+    assert stored == datetime(2026, 11, 27, 10, 30, tzinfo=UTC)

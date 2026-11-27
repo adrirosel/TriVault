@@ -1,11 +1,12 @@
 """Transaction Pydantic schemas with strict financial precision and business-rule validation."""
 
-from datetime import datetime
+
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.enums import TransactionType
+from app.schemas.types import UtcDatetime
 
 _AMOUNT_CONSTRAINTS = {"gt": Decimal("0"), "max_digits": 12, "decimal_places": 2}
 
@@ -42,7 +43,7 @@ class TransactionCreate(BaseModel):
     amount: Decimal = Field(**_AMOUNT_CONSTRAINTS)
     type: TransactionType
     description: str | None = Field(default=None, max_length=255)
-    transaction_date: datetime
+    transaction_date: UtcDatetime
 
     # Required for income/expense; forbidden for transfer.
     category_id: int | None = None
@@ -73,7 +74,7 @@ class TransactionUpdate(BaseModel):
     type: TransactionType | None = None
     amount: Decimal | None = Field(default=None, **_AMOUNT_CONSTRAINTS)
     description: str | None = Field(default=None, max_length=255)
-    transaction_date: datetime | None = None
+    transaction_date: UtcDatetime | None = None
 
     @model_validator(mode="after")
     def reject_null_required_fields(self) -> "TransactionUpdate":
@@ -94,6 +95,6 @@ class TransactionOut(BaseModel):
     amount: Decimal
     type: TransactionType
     description: str | None
-    transaction_date: datetime
+    transaction_date: UtcDatetime
     import_hash: str | None
-    created_at: datetime
+    created_at: UtcDatetime

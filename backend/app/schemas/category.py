@@ -1,10 +1,9 @@
 """Category Pydantic schemas."""
 
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import CategoryType
+from app.schemas.types import UtcDatetime
 
 
 class CategoryCreate(BaseModel):
@@ -48,4 +47,4 @@ class CategoryOut(BaseModel):
     name: str
     type: CategoryType
     is_fixed: bool
-    created_at: datetime
+    created_at: UtcDatetime

@@ -1,11 +1,11 @@
 """Account Pydantic schemas enforcing Decimal precision and balance invariants."""
 
-from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.enums import BucketType
+from app.schemas.types import UtcDatetime
 
 SUPPORTED_CURRENCIES = frozenset({"EUR"})
 
@@ -75,4 +75,4 @@ class AccountOut(BaseModel):
     bucket_type: BucketType
     current_balance: Decimal
     currency: str
-    created_at: datetime
+    created_at: UtcDatetime

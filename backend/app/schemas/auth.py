@@ -1,11 +1,11 @@
 """Authentication and user Pydantic schemas."""
 
-from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.core.security import normalize_email, validate_password_byte_length
+from app.schemas.types import UtcDatetime
 
 
 class UserRegister(BaseModel):
@@ -60,7 +60,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     annual_inflation_rate: Decimal
-    created_at: datetime
+    created_at: UtcDatetime
 
 
 class TokenResponse(BaseModel):
