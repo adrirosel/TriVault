@@ -11,3 +11,6 @@ ignore = [
 
 [lint.per-file-ignores]
 "tests/conftest.py" = ["E402"]  # las variables de entorno deben fijarse antes de importar la app
+
+[lint.isort]
+known-third-party = ["alembic"]
