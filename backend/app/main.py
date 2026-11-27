@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import accounts, auth, categories, transactions
+from app.api.routes import accounts, analytics, auth, categories, funds, transactions
 from app.core.config import get_settings
 
 
@@ -34,6 +34,8 @@ def create_app() -> FastAPI:
     application.include_router(accounts.router, prefix=settings.API_V1_PREFIX)
     application.include_router(categories.router, prefix=settings.API_V1_PREFIX)
     application.include_router(transactions.router, prefix=settings.API_V1_PREFIX)
+    application.include_router(funds.router, prefix=settings.API_V1_PREFIX)
+    application.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
 
     return application
 
